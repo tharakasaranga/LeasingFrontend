@@ -7,15 +7,12 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
   const [rebatingPercentage, setRebatingPercentage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  
 
   const remainingLoanInterest = 218865.23;
   const remainingDeductInterest = 218865.23;
   const remainingCapitaliseInterest = 0.00;
   const totalInterest = 2221189.44;
-  const loanAmount = 1000000;
-  const leasingAmount = 1200000;
-  
+
  
   const rebatingAmount = (totalInterest * (rebatingPercentage / 100));
 
@@ -36,6 +33,7 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
       });
 
       const newRefinanceID = refinanceRes.data.RefinanceID;
+
      
       await apiFetch('rebates', {
         method: 'POST',
@@ -78,14 +76,11 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
               <span className="text-gray-500">Name:</span> <span className="text-right truncate">{selectedContract.customer?.CustomerName}</span>
               <span className="text-gray-500">NIC:</span> <span className="text-right">{selectedContract.customer?.NIC}</span>
               <span className="text-gray-500">Brand/Model:</span> <span className="text-right truncate">{selectedContract.vehicle?.Brand}</span>
-              <span className="text-gray-500">Loan Amount</span> <span className="text-right truncate">Rs. {loanAmount.toLocaleString()}</span>
-              <span className="text-gray-500">Leasing Amount</span> <span className="text-right truncate">Rs. {leasingAmount.toLocaleString()}</span>
-              
             </div>
           </div>
         ) : (
           <div className="text-xs text-gray-500 bg-[#121724] p-4 rounded-lg text-center border border-dashed border-gray-800">
-            Select a contract from the left list.
+            Please select a contract from the list.
           </div>
         )}
 

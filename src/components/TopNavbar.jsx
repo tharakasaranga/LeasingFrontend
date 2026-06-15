@@ -13,13 +13,27 @@ export default function TopNavbar() {
         {steps.map((step, idx) => (
           <div 
             key={idx} 
-            className={`flex items-center space-x-2 cursor-pointer pb-1 ${idx === 0 ? 'text-blue-500 border-b-2 border-blue-500 font-semibold' : 'hover:text-gray-200'}`}
+            className={`flex items-center space-x-2 cursor-pointer pb-1 ${idx === 0 ? 'text-white-0 border-b-2 bg-purple-700 text-gray-100 font-semibold' : 'hover:text-gray-200'} border-2 border-gray-800 p-2`}
           >
-            <span className={`w-2 h-2 rounded-full border ${idx === 0 ? 'bg-blue-500 border-blue-500' : 'border-gray-500'}`}></span>
+            <span className={`w-2 h-2 rounded-full border  'border-gray-500' `}></span>          
             <span>{step}</span>
           </div>
         ))}
       </div>
+      <hr />
+
+      <div className="px-6 py-4 bg-[#111625] flex items-center mt-4">
+        <h1>Contract</h1>
+      </div>
+    
+
+        <div>
+            <h2>Select Contract</h2>
+            
+        </div>
+      
+
+
     </div>
   );
 }
