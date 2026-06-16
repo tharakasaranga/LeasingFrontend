@@ -70,7 +70,7 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
  
         {selectedContract ? (
           <div className="bg-[#121724] p-3 rounded-lg flex space-x-3 border border-gray-800">
-            <div className="w-14 h-14 bg-purple-600 rounded flex items-center justify-center flex-shrink-0">
+            <div className="w-14 h-14 bg-green-600 rounded flex items-center justify-center flex-shrink-0">
               <Car className="w-8 h-8 text-white" />
             </div>
             <div className="text-[11px] text-gray-300 grid grid-cols-2 gap-x-2 gap-y-0.5 w-full">

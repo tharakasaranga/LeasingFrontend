@@ -46,7 +46,7 @@ export default function ContractRefinancePage() {
   return (
     <div className="min-h-screen bg-[#0d111a] text-gray-100 flex flex-col font-sans">
       <div className="px-6 py-4 bg-[#111625] flex items-center">
-        <h1 className="text-sm font-bold tracking-wide text-gray-200">📄 Contract Refinance</h1>
+        <h1 className="text-sm font-bold tracking-wide text-gray-200">Contract Refinance</h1>
       </div>
 
       <TopNavbar />
