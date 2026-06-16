@@ -7,25 +7,28 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
   const [rebatingPercentage, setRebatingPercentage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  
+  const loanAmount = selectedContract?.LoanAmount ? Number(selectedContract.LoanAmount) : 0;
+  const leasingAmount = selectedContract?.LeasingAmount ? Number(selectedContract.LeasingAmount) : 0;
 
-  const remainingLoanInterest = 218865.23;
-  const remainingDeductInterest = 218865.23;
-  const remainingCapitaliseInterest = 0.00;
-  const totalInterest = 2221189.44;
-  const loanAmount = 1000000;
-  const leasingAmount = 1200000;
-  
- 
+  const remainingLoanInterest = selectedContract?.rebate?.RemainingLoanInterest ? Number(selectedContract.rebate.RemainingLoanInterest) : 150000.00;
+  const remainingDeductInterest = selectedContract?.rebate?.RemainingDeductInterest ? Number(selectedContract.rebate.RemainingDeductInterest) : 25000.00;
+  const remainingCapitaliseInterest = selectedContract?.rebate?.RemainingCapitaliseInterest ? Number(selectedContract.rebate.RemainingCapitaliseInterest) : 10000.00;
+  const totalInterest = selectedContract?.rebate?.TotalInterest ? Number(selectedContract.rebate.TotalInterest) : (remainingLoanInterest + remainingDeductInterest + remainingCapitaliseInterest);
+
   const rebatingAmount = (totalInterest * (rebatingPercentage / 100));
 
+  useEffect(() => {
+    if (selectedContract?.rebate?.RebatingInterestPercentage) {
+      setRebatingPercentage(Number(selectedContract.rebate.RebatingInterestPercentage));
+    } else {
+      setRebatingPercentage(0);
+    }
+  }, [selectedContract]);
 
   const handleProceed = async () => {
     if (!selectedContract) return;
-
     setSubmitting(true);
     try {
-
       const refinanceRes = await apiFetch('refinance-applications', {
         method: 'POST',
         body: JSON.stringify({
@@ -35,7 +38,7 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
         })
       });
 
-      const newRefinanceID = refinanceRes.data.RefinanceID;
+      const newRefinanceID = refinanceRes.data?.RefinanceID || 1;
      
       await apiFetch('rebates', {
         method: 'POST',
@@ -50,10 +53,8 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
         })
       });
 
-      alert("Refinance & Rebate successfully recorded in Backend!");
       onSuccess(); 
-    } catch (error) {
-      alert("Error saving data to backend. Check console.");
+      alert("Error saving data to backend.");
     } finally {
       setSubmitting(false);
     }
@@ -63,24 +64,22 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
     <div className="bg-[#171e30] rounded-xl border border-gray-800 p-5 flex flex-col h-full justify-between">
       <div className="space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-gray-200"> Selection Summary</h3>
+          <h3 className="text-sm font-semibold text-gray-200">Selection Summary</h3>
           <p className="text-[11px] text-gray-500 mt-0.5">Review your selection before proceeding</p>
         </div>
-
  
         {selectedContract ? (
           <div className="bg-[#121724] p-3 rounded-lg flex space-x-3 border border-gray-800">
-            <div className="w-14 h-14 bg-green-600 rounded flex items-center justify-center flex-shrink-0">
+            <div className="w-14 h-14 bg-purple-600 rounded flex items-center justify-center flex-shrink-0">
               <Car className="w-8 h-8 text-white" />
             </div>
             <div className="text-[11px] text-gray-300 grid grid-cols-2 gap-x-2 gap-y-0.5 w-full">
               <span className="text-gray-500">Contract No:</span> <span className="text-blue-400 text-right">HO/MB/{selectedContract.ContractID}</span>
-              <span className="text-gray-500">Name:</span> <span className="text-right truncate">{selectedContract.customer?.CustomerName}</span>
-              <span className="text-gray-500">NIC:</span> <span className="text-right">{selectedContract.customer?.NIC}</span>
-              <span className="text-gray-500">Brand/Model:</span> <span className="text-right truncate">{selectedContract.vehicle?.Brand}</span>
-              <span className="text-gray-500">Loan Amount</span> <span className="text-right truncate">Rs. {loanAmount.toLocaleString()}</span>
-              <span className="text-gray-500">Leasing Amount</span> <span className="text-right truncate">Rs. {leasingAmount.toLocaleString()}</span>
-              
+              <span className="text-gray-500">Name:</span> <span className="text-right truncate">{selectedContract.customer?.CustomerName || 'N/A'}</span>
+              <span className="text-gray-500">NIC:</span> <span className="text-right">{selectedContract.customer?.NIC || 'N/A'}</span>
+              <span className="text-gray-500">Brand/Model:</span> <span className="text-right truncate">{selectedContract.vehicle?.Brand} - {selectedContract.vehicle?.Model}</span>
+              <span className="text-gray-500">Loan Amount:</span> <span className="text-right text-gray-200">Rs. {loanAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              <span className="text-gray-500">Leasing Amount:</span> <span className="text-right text-gray-200">Rs. {leasingAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
           </div>
         ) : (
@@ -88,37 +87,33 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
             Select a contract from the left list.
           </div>
         )}
-
   
         <div className="space-y-3">
-          <div className="bg-[#20293a] px-3 py-1.5 rounded-md text-xs font-medium text-gray-300"> Rebates</div>
-          
+          <div className="bg-[#20293a] px-3 py-1.5 rounded-md text-xs font-medium text-gray-300">Rebates</div>
           <div className="bg-[#121724] p-4 rounded-lg border border-gray-800 text-xs space-y-3">
             <h4 className="text-gray-400 font-medium pb-2 border-b border-gray-800/60">Interest Rebates</h4>
-            
             <div className="flex justify-between text-gray-400">
               <span>Remaining Loan Interests:</span>
-              <span className="text-gray-200">Rs.{remainingLoanInterest.toLocaleString()}</span>
+              <span className="text-gray-200">Rs. {remainingLoanInterest.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between text-gray-400">
               <span>Remaining Deduct From Loan Interests:</span>
-              <span className="text-gray-200">Rs.{remainingDeductInterest.toLocaleString()}</span>
+              <span className="text-gray-200">Rs. {remainingDeductInterest.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between text-gray-400">
               <span>Remaining Capitalise Interests:</span>
-              <span className="text-gray-200">Rs.{remainingCapitaliseInterest.toFixed(2)}</span>
+              <span className="text-gray-200">Rs. {remainingCapitaliseInterest.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between font-semibold text-gray-300 pt-1 border-t border-gray-800/40">
               <span>Total Interests:</span>
-              <span className="text-gray-100">Rs.{totalInterest.toLocaleString()}</span>
+              <span className="text-gray-100">Rs. {totalInterest.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
-
-     
             <div className="flex justify-between items-center pt-2">
               <span className="text-gray-400">Rebating Interests:</span>
               <div className="flex items-center bg-[#171e30] border border-gray-700 rounded px-2 py-1 w-24">
                 <input 
                   type="number" 
+                  step="0.01"
                   value={rebatingPercentage}
                   onChange={(e) => setRebatingPercentage(Number(e.target.value))}
                   className="bg-transparent w-full text-right text-gray-200 focus:outline-none"
@@ -126,15 +121,13 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
                 <span className="text-gray-500 text-[10px] ml-1">%</span>
               </div>
             </div>
-
             <div className="flex justify-between text-gray-400">
               <span>Rebating Interests Amount:</span>
-              <span className="text-red-400">- Rs.{rebatingAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              <span className="text-red-400">- Rs. {rebatingAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
           </div>
         </div>
       </div>
-
 
       <div className="flex space-x-3 pt-6">
         <button 

@@ -6,34 +6,28 @@ const steps = [
   "Product", "Other Charges", "Insurance", "Summary", "Disbursement", "Documents"
 ];
 
-export default function TopNavbar() {
+export default function TopNavbar({ activeStep, setActiveStep }) {
   return (
-    <div className="w-full bg-[#111625] border-b border-gray-800 px-6 py-3 overflow-x-auto whitespace-nowrap">
-      <div className="flex space-x-6 text-xs text-gray-400">
-        {steps.map((step, idx) => (
-          <div 
-            key={idx} 
-            className={`flex items-center space-x-2 cursor-pointer pb-1 ${idx === 0 ? 'text-white-0 border-b-2 bg-purple-700 text-gray-100 font-semibold' : 'hover:text-gray-200'} border-2 border-gray-800 p-2`}
-          >
-            <span className={`w-2 h-2 rounded-full border  'border-gray-500' `}></span>          
-            <span>{step}</span>
-          </div>
-        ))}
+    <div className="w-full bg-[#111625] border-b border-gray-800 px-6 py-4 overflow-x-auto whitespace-nowrap">
+      <div className="flex space-x-4 text-xs">
+        {steps.map((step, idx) => {
+          const isActive = idx === activeStep;
+          return (
+            <div 
+              key={idx} 
+              onClick={() => setActiveStep(idx)}
+              className={`flex items-center space-x-2 cursor-pointer px-3 py-1.5 rounded-lg border transition-all duration-200 ${
+                isActive 
+                  ? 'bg-purple-700/20 text-purple-400 border-purple-500 font-semibold shadow-[0_0_15px_rgba(147,51,234,0.1)]' 
+                  : 'text-gray-400 border-gray-800 hover:text-gray-200 hover:border-gray-700'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full transition-all ${isActive ? 'bg-purple-400 scale-110' : 'bg-gray-600'}`}></span>          
+              <span>{step}</span>
+            </div>
+          );
+        })}
       </div>
-      <hr />
-
-      <div className="px-6 py-4 bg-[#111625] flex items-center mt-4">
-        <h1>Contract</h1>
-      </div>
-    
-
-        <div>
-            <h2>Select Contract</h2>
-            
-        </div>
-      
-
-
     </div>
   );
 }
