@@ -3,26 +3,66 @@ import React, { useState, useEffect } from 'react';
 import { Car } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
+const zeroRebate = {
+  RemainingLoanInterest: 0,
+  RemainingDeductInterest: 0,
+  RemainingCapitaliseInterest: 0,
+  TotalInterest: 0,
+  RebatingInterestPercentage: 0,
+  RebatingInterestAmount: 0,
+};
+
+const toNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
 export default function SelectionSummary({ selectedContract, onCancel, onSuccess }) {
   const [rebatingPercentage, setRebatingPercentage] = useState(0);
+  const [rebateData, setRebateData] = useState(zeroRebate);
+  const [rebateLoading, setRebateLoading] = useState(false);
+  const [rebateError, setRebateError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const loanAmount = selectedContract?.LoanAmount ? Number(selectedContract.LoanAmount) : 0;
   const leasingAmount = selectedContract?.LeasingAmount ? Number(selectedContract.LeasingAmount) : 0;
 
-  const remainingLoanInterest = selectedContract?.rebate?.RemainingLoanInterest ? Number(selectedContract.rebate.RemainingLoanInterest) : 150000.00;
-  const remainingDeductInterest = selectedContract?.rebate?.RemainingDeductInterest ? Number(selectedContract.rebate.RemainingDeductInterest) : 25000.00;
-  const remainingCapitaliseInterest = selectedContract?.rebate?.RemainingCapitaliseInterest ? Number(selectedContract.rebate.RemainingCapitaliseInterest) : 10000.00;
-  const totalInterest = selectedContract?.rebate?.TotalInterest ? Number(selectedContract.rebate.TotalInterest) : (remainingLoanInterest + remainingDeductInterest + remainingCapitaliseInterest);
+  const remainingLoanInterest = toNumber(rebateData?.RemainingLoanInterest);
+  const remainingDeductInterest = toNumber(rebateData?.RemainingDeductInterest);
+  const remainingCapitaliseInterest = toNumber(rebateData?.RemainingCapitaliseInterest);
+  const totalInterest = toNumber(rebateData?.TotalInterest);
 
   const rebatingAmount = (totalInterest * (rebatingPercentage / 100));
 
   useEffect(() => {
-    if (selectedContract?.rebate?.RebatingInterestPercentage) {
-      setRebatingPercentage(Number(selectedContract.rebate.RebatingInterestPercentage));
-    } else {
-      setRebatingPercentage(0);
-    }
+    let cancelled = false;
+
+    setRebateData(zeroRebate);
+    setRebateError(null);
+    setRebatingPercentage(0);
+
+    if (!selectedContract?.ContractID) return undefined;
+
+    setRebateLoading(true);
+
+    apiFetch(`rebates/contract/${selectedContract.ContractID}`)
+      .then((data) => {
+        if (cancelled) return;
+        const rebate = data?.RebateID ? data : zeroRebate;
+        setRebateData(rebate);
+        setRebatingPercentage(toNumber(rebate?.RebatingInterestPercentage));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setRebateError(err.message || 'Unable to load rebate values.');
+      })
+      .finally(() => {
+        if (!cancelled) setRebateLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedContract]);
 
   const handleProceed = async () => {
@@ -38,7 +78,10 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
         })
       });
 
-      const newRefinanceID = refinanceRes.data?.RefinanceID || 1;
+      const newRefinanceID = refinanceRes.data?.RefinanceID;
+      if (!newRefinanceID) {
+        throw new Error('Unable to create refinance application.');
+      }
      
       await apiFetch('rebates', {
         method: 'POST',
@@ -53,8 +96,9 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
         })
       });
 
-      onSuccess(); 
-      alert("Error saving data to backend.");
+      onSuccess();
+    } catch (error) {
+      alert(error.message || 'Error saving data to backend.');
     } finally {
       setSubmitting(false);
     }
@@ -92,6 +136,11 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
           <div className="bg-[#20293a] px-3 py-1.5 rounded-md text-xs font-medium text-gray-300">Rebates</div>
           <div className="bg-[#121724] p-4 rounded-lg border border-gray-800 text-xs space-y-3">
             <h4 className="text-gray-400 font-medium pb-2 border-b border-gray-800/60">Interest Rebates</h4>
+            {rebateError && (
+              <div className="text-[10px] text-red-400">
+                {rebateError}
+              </div>
+            )}
             <div className="flex justify-between text-gray-400">
               <span>Remaining Loan Interests:</span>
               <span className="text-gray-200">Rs. {remainingLoanInterest.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
@@ -116,7 +165,8 @@ export default function SelectionSummary({ selectedContract, onCancel, onSuccess
                   step="0.01"
                   value={rebatingPercentage}
                   onChange={(e) => setRebatingPercentage(Number(e.target.value))}
-                  className="bg-transparent w-full text-right text-gray-200 focus:outline-none"
+                  disabled={!selectedContract || rebateLoading}
+                  className="bg-transparent w-full text-right text-gray-200 focus:outline-none disabled:opacity-50"
                 />
                 <span className="text-gray-500 text-[10px] ml-1">%</span>
               </div>
